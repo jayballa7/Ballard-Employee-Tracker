@@ -26,7 +26,7 @@ function start() {
         name: "action",
         type: "list",
         message: "What would you like to do?",
-        choices: ["View All Employees", "Add Employee", "Add Role", "Update Role", "Add Department", "Delete Employee"]
+        choices: ["View All Employees", "Add Employee", "Delete Employee", "Update Role", "Add Role", "Add Department"]
       })
       .then(function(answer) {
         // call different functions based on their answer
@@ -57,7 +57,7 @@ function start() {
 //function to view all tables joined as list of employees with id, title, department, salary, and manager
 function viewAllEmployees() {
     connection.query(
-        "SELECT employees.id AS Id, CONCAT(employees.first_name,' ', employees.last_name) AS Full_Name, roles.title AS Title, departments.name AS Department, roles.salary AS Salary FROM employees LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id",
+        "SELECT employees.id AS Id, CONCAT(employees.first_name,' ', employees.last_name) AS Full_Name, roles.title AS Title, departments.name AS Department, roles.salary AS Salary, managers.manager AS Manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN managers ON employees.manager_id = managers.id",
         (err, res) => {
             if(err) {
                 throw err;
@@ -67,20 +67,6 @@ function viewAllEmployees() {
         }
     )   
 }
-
-// function getManagers() {
-//     var query = "SELECT id, manager FROM managers";
-//     connection.query(query, (err, res) => {
-//         if(err) {
-//             throw err;
-//         }
-//         const managers = res.map(({ id, manager }) => ({
-//                 name: manager,
-//                 value: id
-//         }));
-//     console.log(managers);
-//     })
-// }
 
 
 //function to add Employees to db
@@ -126,14 +112,13 @@ async function addEmployee() {
       ])
       .then(function(answer) {
         // when finished prompting, insert a new employee into the db
-        console.log(answer);
         connection.query(
           "INSERT INTO employees SET ?",
           {
             first_name: answer.firstName,
             last_name: answer.lastName,
             role_id: answer.role,
-            manager_id: 5
+            manager_id: answer.manager
           },
           function(err) {
             if (err) throw err;
@@ -253,7 +238,7 @@ function addDepartment() {
         {
           name: "roleList",
           type: "list",
-          message: "What is their role?",
+          message: "What is their new role?",
           choices: role
       },
       ])
