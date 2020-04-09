@@ -32,8 +32,7 @@ CREATE TABLE employees (
   role_id INT NOT NULL,
   manager_id INT,
   PRIMARY KEY (id),
-  CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES roles(id),
-  CONSTRAINT fk_manager FOREIGN KEY (manager_id) REFERENCES managers(id)
+  CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
 
@@ -64,5 +63,8 @@ SELECT * FROM employees;
 SELECT * FROM roles;
 SELECT * FROM departments;
 
+UPDATE employees SET role_id = 7 WHERE id = 3;
+
 SELECT roles.title, departments.name AS department FROM roles LEFT JOIN departments ON roles.department_id=departments.id;
 SELECT employees.id, managers.manager FROM employees LEFT JOIN managers ON employees.manager_id=managers.id;
+

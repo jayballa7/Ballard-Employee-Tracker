@@ -26,27 +26,42 @@ function start() {
         name: "action",
         type: "list",
         message: "What would you like to do?",
-        choices: ["View All Employees", "Add Employee", "Delete Employee", "Update Role", "Add Role", "Add Department"]
+        choices: ["View All Employees", "View Roles / Departments", "Add Employee", "Delete Employee", "Update Role", "Add Role", "Delete Role", "Add Department", "Delete Department", "Add Manager", "Delete Manager"]
       })
       .then(function(answer) {
         // call different functions based on their answer
         if (answer.action === "View All Employees") {
             viewAllEmployees();
         }
+        else if(answer.action === "View Roles / Departments") {
+            viewRoles();
+        }
         else if(answer.action === "Add Employee") {
             addEmployee();
         }
-        else if(answer.action === "Add Role") {
-            getDepartments();
+        else if(answer.action === "Delete Employee") {
+            deleteEmployee();
         }
         else if(answer.action === "Update Role") {
-          updateRole();
-      }
+            updateRole();
+        }
+        else if(answer.action === "Add Role") {
+            addRole();
+        }
+        else if(answer.action === "Delete Role") {
+            deleteRole();
+        }
         else if(answer.action === "Add Department") {
             addDepartment();
         }
-        else if(answer.action === "Delete Employee") {
-            getEmployeeList();
+        else if(answer.action === "Delete Department") {
+            deleteDep();
+        }
+        else if(answer.action === "Add Manager") {
+            addManager();
+        }
+        else if(answer.action === "Delete Manager") {
+            deleteManager();
         }
         else{
           connection.end();
@@ -68,6 +83,19 @@ function viewAllEmployees() {
     )   
 }
 
+//function to view all roles, salaries and departments
+function viewRoles() {
+  connection.query(
+    "SELECT roles.title AS Title, departments.name AS Department FROM roles LEFT JOIN departments ON roles.department_id = departments.id",
+      (err, res) => {
+          if(err) {
+              throw err;
+          }
+          console.table(res);
+          start();
+      }
+  )   
+}
 
 //function to add Employees to db
 async function addEmployee() {
@@ -130,24 +158,15 @@ async function addEmployee() {
       });
   }
 
-//function to map departments
-function getDepartments() {
-    var query = "SELECT id, name FROM departments";
-    connection.query(query, (err, res) => {
-            if(err) {
-                throw err;
-            }
-            const allDepartments = res.map(({ id, name }) => ({
-                name: name,
-                value: id
-            }));
-        addRole(allDepartments);
-    });
-}
-
-//function to add Roles to db
-function addRole(dep) {
-    // prompt the user to answer questions about the employee's name, role, and manager
+//function to add roles to db
+async function addRole() {
+  const depquery = "SELECT id, name FROM departments";
+  const departments = await connection.query(depquery);
+  const department = departments.map(({ id, name }) => ({
+              name: name,
+              value: id
+  }));   
+    // prompt the user to answer questions about the role they want to add
     inquirer
       .prompt([
         {
@@ -164,11 +183,11 @@ function addRole(dep) {
             name: "department",
             type: "list",
             message: "Which department would you like to add the role to?",
-            choices: dep
+            choices: department
         }
       ])
       .then(function(answer) {
-        // when finished prompting, insert a new employee into the db
+        // when finished prompting, insert a new role into the table
         connection.query(
           "INSERT INTO roles SET ?",
           {
@@ -178,7 +197,7 @@ function addRole(dep) {
           },
           function(err) {
             if (err) throw err;
-            console.log("The role was created successfully!");
+            console.log("The role was added successfully!");
             // re-prompt the user if they want to take another action
             start();
           }
@@ -186,22 +205,22 @@ function addRole(dep) {
       });
   }
 
-//function to add department to db
-function addDepartment() {
+//function to add departments into the db
+async function addDepartment() {
     inquirer
       .prompt([
         {
             name: "department",
             type: "input",
-            message: "What department would you like to add?",
-        }
+            message: "What department would you like to add?"
+        },
       ])
-      .then(function(ans) {
-        // when finished prompting, insert the new department into the table
+      .then(function(answer) {
+        // when finished prompting, insert a new department into the table
         connection.query(
           "INSERT INTO departments SET ?",
           {
-            name: ans.department
+            name: answer.department
           },
           function(err) {
             if (err) throw err;
@@ -212,6 +231,33 @@ function addDepartment() {
         );
       });
   }
+
+//function to add managers into the db
+async function addManager() {
+  inquirer
+    .prompt([
+      {
+          name: "manager",
+          type: "input",
+          message: "Who is the manager you want to add?"
+      },
+    ])
+    .then(function(answer) {
+      // when finished prompting, insert a new manager into the table
+      connection.query(
+        "INSERT INTO managers SET ?",
+        {
+          manager: answer.manager
+        },
+        function(err) {
+          if (err) throw err;
+          console.log("The manager was added successfully!");
+          // re-prompt the user if they want to take another action
+          start();
+        }
+      );
+    });
+}
 
   async function updateRole() {
     const rolequery = "SELECT id, title FROM roles";
@@ -260,39 +306,30 @@ function addDepartment() {
       });
   }
 
-//query to get list of all employees
-function getEmployeeList() {
-    var query = "SELECT id, first_name, last_name FROM employees";
-    connection.query(query, (err, res) => {
-            if(err) {
-                throw err;
-            }
-            const allNames = res.map(({ id, first_name, last_name }) => ({
-                name: first_name + " " + last_name,
-                value: id
-            }));
-        deleteEmployee(allNames);
-    });
-}
-
-function deleteEmployee(nameList) {
-    // prompt the user to choose who they want to delete
+//function to delete employees from the db
+async function deleteEmployee() {
+  const employeequery = "SELECT id, CONCAT(first_name, ' ', last_name) AS full_name FROM employees";
+  const employees = await connection.query(employeequery);
+  const employee = employees.map(({ id, full_name }) => ({
+    name: full_name,
+    value: id
+  })); 
     inquirer
       .prompt([
         {
-            name: "remove",
+            name: "employee",
             type: "list",
-            message: "Who do you want to remove?",
-            choices: nameList
-        },
+            message: "Which employee do you want to remove?",
+            choices: employee
+        }      
       ])
       .then(function(answer) {
-        // when finished prompting, delete the employee from the db
+        // delete the employee from the table
         connection.query(
-            "DELETE FROM employees WHERE ?",
-            {
-               id: answer.remove,
-            },
+          "DELETE FROM employees WHERE ?",
+          {
+            id: answer.employee
+          },
           function(err) {
             if (err) throw err;
             console.log("The employee was deleted successfully.");
@@ -303,28 +340,35 @@ function deleteEmployee(nameList) {
       });
   }
 
-//function to delete employees from db
-function deleteEmployee(nameList) {
-    // prompt the user to choose who they want to delete
+
+
+//function to delete roles from the db
+async function deleteRole() {
+  const rolequery = "SELECT id, title FROM roles";
+  const roles = await connection.query(rolequery);
+  const role = roles.map(({ id, title }) => ({
+              name: title,
+              value: id
+          }));  
     inquirer
       .prompt([
         {
-            name: "remove",
+            name: "role",
             type: "list",
-            message: "Who do you want to remove?",
-            choices: nameList
-        },
+            message: "Which role do you want to delete?",
+            choices: role
+        }      
       ])
       .then(function(answer) {
-        // when finished prompting, delete the employee from the db
+        // delete the role from the table
         connection.query(
-            "DELETE FROM employees WHERE ?",
-            {
-               id: answer.remove,
-            },
+          "DELETE FROM roles WHERE ?",
+          {
+            id: answer.role
+          },
           function(err) {
             if (err) throw err;
-            console.log("The employee was deleted successfully.");
+            console.log("The role was deleted successfully.");
             // re-prompt the user if they want to take another action
             start();
           }
@@ -332,4 +376,73 @@ function deleteEmployee(nameList) {
       });
   }
 
+//function to delete departments from the db
+async function deleteDep() {
+  const depquery = "SELECT id, name FROM departments";
+  const departments = await connection.query(depquery);
+  const department = departments.map(({ id, name }) => ({
+              name: name,
+              value: id
+          }));  
+    inquirer
+      .prompt([
+        {
+            name: "department",
+            type: "list",
+            message: "Which department do you want to delete?",
+            choices: department
+        }      
+      ])
+      .then(function(answer) {
+        // delete the department from the table
+        connection.query(
+          "DELETE FROM departments WHERE ?",
+          {
+            id: answer.department
+          },
+          function(err) {
+            if (err) throw err;
+            console.log("The department was deleted successfully.");
+            // re-prompt the user if they want to take another action
+            start();
+          }
+        );
+      });
+  }
+
+//function to delete managers from the db
+async function deleteManager() {
+  const manquery = "SELECT id, manager FROM managers";
+  const managers = await connection.query(manquery);
+  const manager = managers.map(({ id, manager }) => ({
+              name: manager,
+              value: id
+          }));  
+    inquirer
+      .prompt([
+        {
+            name: "manager",
+            type: "list",
+            message: "Which manager do you want to remove?",
+            choices: manager
+        }      
+      ])
+      .then(function(answer) {
+        // delete the manager from the table
+        connection.query(
+          "DELETE FROM managers WHERE ?",
+          {
+            id: answer.manager
+          },
+          function(err) {
+            if (err) throw err;
+            console.log("The manager was deleted successfully.");
+            // re-prompt the user if they want to take another action
+            start();
+          }
+        );
+      });
+  }
+
+//calling function that asks the user what action they would like to take
 start();
