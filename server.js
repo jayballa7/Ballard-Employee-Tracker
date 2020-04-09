@@ -26,7 +26,7 @@ function start() {
         name: "action",
         type: "list",
         message: "What would you like to do?",
-        choices: ["View All Employees", "View Roles / Departments", "Add Employee", "Delete Employee", "Update Role", "Add Role", "Delete Role", "Add Department", "Delete Department", "Add Manager", "Update Manager", "Delete Manager"]
+        choices: ["View All Employees", "View Roles / Departments", "View Managers", "Add Employee", "Delete Employee", "Update Role", "Add Role", "Delete Role", "Add Department", "Delete Department", "Add Manager", "Update Manager", "Delete Manager"]
       })
       .then(function(answer) {
         // call different functions based on their answer
@@ -35,6 +35,9 @@ function start() {
         }
         else if(answer.action === "View Roles / Departments") {
             viewRoles();
+        }
+        else if(answer.action === "View Managers") {
+            viewManagers();
         }
         else if(answer.action === "Add Employee") {
             addEmployee();
@@ -91,6 +94,20 @@ function viewRoles() {
   connection.query(
     "SELECT roles.title AS Title, departments.name AS Department FROM roles LEFT JOIN departments ON roles.department_id = departments.id",
       (err, res) => {
+          if(err) {
+              throw err;
+          }
+          console.table(res);
+          start();
+      }
+  )   
+}
+
+//function to view all Managers
+function viewManagers() {
+  connection.query(
+    "SELECT managers.manager AS Manager FROM managers",
+    (err, res) => {
           if(err) {
               throw err;
           }
@@ -301,7 +318,7 @@ async function addManager() {
             ],
           function(err) {
             if (err) throw err;
-            console.log("The role has been updated");
+            console.log("The role has been updated.");
             // re-prompt the user if they want to take another action
             start();
           }

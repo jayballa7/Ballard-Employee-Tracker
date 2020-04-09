@@ -1,6 +1,8 @@
 # Ballard-Employee-Tracker
 A command-line application for managing a company's employees using node, inquirer, and MySQL.
 
+Demo: https://drive.google.com/file/d/1w0uB-bwU91y_Pi91ww9qYK0MoWqmnMkG/view
+
 ## Table of contents
 * #general-info
 * #technologies
@@ -21,16 +23,12 @@ This application allows the user to view, update, and delete employees, managers
 
 ## Features
 List of features ready:
-* The public folder contains the html, css, and js files that represent the front end.
-* Server.js contains routes to direct different information to different URLS.
-* The api/notes route displays all of the saved notes in JSON format.
-* When the server is run, you can view the main landing page and click "Get Started" to get to the Notes page.
-* On the Notes page, the user can write notes that will be saved in a json file and will display on that page.
-* The db.json file stores all of the saved notes.
-* The user may also delete each note. The json file will be updated when notes are added or deleted.
+* The application is built using Node.js, Mysql and the inquirer and util packages.
+* Once the server is run, the user can take an action that helps to keep track of their employees.
+* The actions available are View All Employees, View Roles / Departments, View Managers, Add Employee, Delete Employee,   Update Role, Add Role, Delete Role, Add Department, Delete Department, Add Manager, Update Manager, and Delete Manager.
 
 ## Status
-* Complete
+* Complete, however more actions could be added.
 
 ## Inspiration
 Thanks to my tutor for all the painstaking work on this project.
