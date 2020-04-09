@@ -26,7 +26,7 @@ function start() {
         name: "action",
         type: "list",
         message: "What would you like to do?",
-        choices: ["View All Employees", "View Roles / Departments", "Add Employee", "Delete Employee", "Update Role", "Add Role", "Delete Role", "Add Department", "Delete Department", "Add Manager", "Delete Manager"]
+        choices: ["View All Employees", "View Roles / Departments", "Add Employee", "Delete Employee", "Update Role", "Add Role", "Delete Role", "Add Department", "Delete Department", "Add Manager", "Update Manager", "Delete Manager"]
       })
       .then(function(answer) {
         // call different functions based on their answer
@@ -55,10 +55,13 @@ function start() {
             addDepartment();
         }
         else if(answer.action === "Delete Department") {
-            deleteDep();
+            deleteDepartment();
         }
         else if(answer.action === "Add Manager") {
             addManager();
+        }
+        else if(answer.action === "Update Manager") {
+            updateManager();
         }
         else if(answer.action === "Delete Manager") {
             deleteManager();
@@ -306,6 +309,54 @@ async function addManager() {
       });
   }
 
+//update an employee's manager
+  async function updateManager() {
+    const employeequery = "SELECT id, CONCAT(first_name, ' ', last_name) AS full_name FROM employees";
+    const employees = await connection.query(employeequery);
+    const employee = employees.map(({ id, full_name }) => ({
+      name: full_name,
+      value: id
+    })); 
+    const managerquery = "SELECT id, manager FROM managers";
+    const managers = await connection.query(managerquery);
+    const manager = managers.map(({ id, manager }) => ({
+                name: manager,
+                value: id
+            }));  
+    // prompt the user to choose who they want to update
+    inquirer
+      .prompt([
+        {
+            name: "employee",
+            type: "list",
+            message: "Who do you want to update?",
+            choices: employee
+        },
+        {
+          name: "manager",
+          type: "list",
+          message: "Who is their new manager?",
+          choices: manager
+      },
+      ])
+      .then(function(answer) {
+        console.log(answer);
+        // when finished prompting, update the employee's manager in the db
+        connection.query(
+            "UPDATE employees SET manager_id = ? WHERE id = ?",
+            [
+               answer.manager, answer.employee
+            ],
+          function(err) {
+            if (err) throw err;
+            console.log("Their manager has been updated");
+            // re-prompt the user if they want to take another action
+            start();
+          }
+        );
+      });
+  }
+
 //function to delete employees from the db
 async function deleteEmployee() {
   const employeequery = "SELECT id, CONCAT(first_name, ' ', last_name) AS full_name FROM employees";
@@ -377,7 +428,7 @@ async function deleteRole() {
   }
 
 //function to delete departments from the db
-async function deleteDep() {
+async function deleteDepartment() {
   const depquery = "SELECT id, name FROM departments";
   const departments = await connection.query(depquery);
   const department = departments.map(({ id, name }) => ({
